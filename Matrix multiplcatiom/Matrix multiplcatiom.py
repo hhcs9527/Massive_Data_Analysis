@@ -32,17 +32,16 @@ def mapper():
 
 # Join可以使得所有 k 為中間值者放在同一個 tuple 中
 # 做完 join 就 map 成 ((i,j), mvalue*nvalue)
-# 再用 group by 以(i,j)為基礎來分群
 def shuffler():    
     M, N = mapper() 
     MN = M.join(N)
-    MN_shuffle =(MN.map(lambda entry: ((entry[1][0][0], entry[1][1][0]) ,(entry[1][0][1]*entry[1][1][1]))).groupByKey())
+    MN_shuffle = MN.map(lambda entry: ((entry[1][0][0], entry[1][1][0]) ,(entry[1][0][1]*entry[1][1][1]))
     return MN_shuffle
 
-# 合併最後所有屬於同一個key的值,即完成了 P = M*N
+# 利用reduce by key合併最後所有屬於同一個key的值,即完成了 P = M*N
 def reducer():
     MN_shuffle = shuffler()
-    result = MN_shuffle.map(lambda x: (x[0][0], x[0][1], sum(x[1])))
+    result = MN_shuffle.reduceByKey(lambda x,y : (x[0][0], x[0][1], x[1]+y[1]))
     return result.collect()
 
 
@@ -57,4 +56,3 @@ def filewriter():
 
 filewriter()
 sc.stop()
-
